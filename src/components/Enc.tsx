@@ -73,7 +73,10 @@ export function Enc(props: EncProps) {
         storeEncState(state);
     }
 
+    const prevAlphaRef = useRef<number | null>(null);
+
     const [orientation, setOrientation] = useState<OrientationData>({ alpha: null, beta: null, gamma: null });
+    const threshold = 5; // Define the threshold for delta alpha
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -155,10 +158,25 @@ export function Enc(props: EncProps) {
 
         const handleOrientation = (event: DeviceOrientationEvent) => {
           const alpha = event.alpha;
-          if (map.current && alpha !== null) {
-            map.current.setBearing(alpha);
+          if (alpha !== null) {
+            const prevAlpha = prevAlphaRef.current;
+
+            // Update the map bearing if the delta exceeds the threshold
+            if (prevAlpha === null || Math.abs(alpha - prevAlpha) > threshold) {
+              if (map.current) {
+                map.current.setBearing(alpha);
+              }
+              prevAlphaRef.current = alpha;
+            }
           }
         };
+
+        // const handleOrientation = (e: DeviceOrientationEvent) => {
+        //   const alpha = e.alpha;
+        //   if (map.current && alpha !== null) {
+        //     map.current.setBearing(alpha);
+        //   }
+        // };
 
         const requestPermission = async () => {
           // Check if the requestPermission method exists
